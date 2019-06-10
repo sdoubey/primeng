@@ -4,7 +4,7 @@ import { DynamicDialogContent } from './dynamicdialogcontent';
 import { DynamicDialogConfig } from './dynamicdialog-config';
 import { CommonModule } from '@angular/common';
 import { DomHandler } from '../dom/domhandler';
-import { DynamicDialogRef } from './dynamicdialog-ref';
+import { DynamicDialogRef,CloseReason } from './dynamicdialog-ref';
 
 @Component({
 	selector: 'p-dynamicDialog',
@@ -16,7 +16,7 @@ import { DynamicDialogRef } from './dynamicdialog-ref';
 			[style.width]="config.width" [style.height]="config.height">
             <div class="ui-dialog-titlebar ui-widget-header ui-helper-clearfix ui-corner-top" *ngIf="config.showHeader === false ? false: true">
                 <span class="ui-dialog-title">{{config.header}}</span>
-                <a [ngClass]="'ui-dialog-titlebar-icon ui-dialog-titlebar-close ui-corner-all'" tabindex="0" role="button" (click)="close()" (keydown.enter)="close()" *ngIf="config.closable === false ? false : true">
+                <a [ngClass]="'ui-dialog-titlebar-icon ui-dialog-titlebar-close ui-corner-all'" tabindex="0" role="button" (click)="close('BUTTON')" (keydown.enter)="close('BUTTON')" *ngIf="config.closable === false ? false : true">
                     <span class="pi pi-times"></span>
                 </a>
             </div>
@@ -46,6 +46,8 @@ export class DynamicDialogComponent implements AfterViewInit, OnDestroy {
 
 	visible: boolean = true;
 
+	closeReason: CloseReason;
+
 	componentRef: ComponentRef<any>;
 
 	mask: HTMLDivElement;
@@ -69,7 +71,7 @@ export class DynamicDialogComponent implements AfterViewInit, OnDestroy {
 	}
 
 	onOverlayClicked(evt: MouseEvent) {
-		this.dialogRef.close();
+		this.dialogRef.close('MASK');
 	}
 
 	onDialogClicked(evt: MouseEvent) {
@@ -110,7 +112,7 @@ export class DynamicDialogComponent implements AfterViewInit, OnDestroy {
 	
 	onAnimationEnd(event: AnimationEvent) {
 		if (event.toState === 'void') {
-			this.dialogRef.close();
+			this.dialogRef.close(this.closeReason);
 		}
 	}
 
@@ -120,13 +122,14 @@ export class DynamicDialogComponent implements AfterViewInit, OnDestroy {
 		this.container = null;
 	}
 	    
-	close() {
+	close(closeReason?: CloseReason) {
+		this.closeReason = closeReason;
 		this.visible = false;
 	}
 
 	onMaskClick() {
 		if (this.config.dismissableMask) {
-			this.close();
+			this.close('MASK');
 		}
 	}
 
@@ -144,7 +147,7 @@ export class DynamicDialogComponent implements AfterViewInit, OnDestroy {
         this.documentEscapeListener = this.renderer.listen('document', 'keydown', (event) => {
             if (event.which == 27) {
                 if (parseInt(this.container.style.zIndex) == DomHandler.zindex) {
-					this.close();
+					this.close('ESCAPE');
 				}
             }
         });
