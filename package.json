@@ -1,9 +1,13 @@
 {
-  "name": "primeng",
-  "version": "8.0.2",
+  "name": "@sdoubey/primeng-squamigera",
+  "version": "8.0.2-fix-1",
   "license": "MIT",
   "scripts": {
     "ng": "ng",
+    "build-components": "ngc -p tsconfig-release.json",
+    "build-assets": "gulp build-assets",
+    "build-exports": "gulp build-exports",
+    "build-redistribute": "npm run build-components && npm run build-assets && npm run build-exports",
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
