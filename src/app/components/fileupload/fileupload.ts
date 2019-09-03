@@ -110,7 +110,7 @@ export class FileUpload implements AfterViewInit,AfterContentInit,OnDestroy,Bloc
     @Input() mode: string = 'advanced';
 
     @Input() headers: HttpHeaders;
-    
+
     @Input() customUpload: boolean;
 
     @Input() fileLimit: number;
@@ -128,6 +128,8 @@ export class FileUpload implements AfterViewInit,AfterContentInit,OnDestroy,Bloc
     @Output() onRemove: EventEmitter<any> = new EventEmitter();
 
     @Output() onSelect: EventEmitter<any> = new EventEmitter();
+
+    @Output() onBeforeSelect: EventEmitter<any> = new EventEmitter();
 
     @Output() onProgress: EventEmitter<any> = new EventEmitter();
 
@@ -208,37 +210,43 @@ export class FileUpload implements AfterViewInit,AfterContentInit,OnDestroy,Bloc
     }
 
     ngAfterViewInit() {
-        if(this.mode === 'advanced') {
+        if (this.mode === 'advanced') {
             this.zone.runOutsideAngular(() => {
-                if (this.content)
-                    this.content.nativeElement.addEventListener('dragover', this.onDragOver.bind(this));
+                if (this.content) this.content.nativeElement.addEventListener('dragover', this.onDragOver.bind(this));
             });
         }
     }
 
     onFileSelect(event) {
-        if(event.type !== 'drop' && this.isIE11() && this.duplicateIEEvent) {
+        if (event.type !== 'drop' && this.isIE11() && this.duplicateIEEvent) {
             this.duplicateIEEvent = false;
             return;
         }
 
+        this.onBeforeSelect.emit(event);
+
+        setTimeout(() => this.selectFile(event), 1);
+    }
+
+    private selectFile(event) {
         this.msgs = [];
         if(!this.multiple) {
             this.files = [];
         }
 
         let files = event.dataTransfer ? event.dataTransfer.files : event.target.files;
+
         for(let i = 0; i < files.length; i++) {
             let file = files[i];
 
             if(!this.isFileSelected(file)){
-              if(this.validate(file)) {
-                  if(this.isImage(file)) {
-                      file.objectURL = this.sanitizer.bypassSecurityTrustUrl((window.URL.createObjectURL(files[i])));
-                  }
+                if(this.validate(file)) {
+                    if(this.isImage(file)) {
+                        file.objectURL = this.sanitizer.bypassSecurityTrustUrl((window.URL.createObjectURL(files[i])));
+                    }
 
-                  this.files.push(files[i]);
-              }
+                    this.files.push(files[i]);
+                }
             }
         }
 
@@ -253,9 +261,9 @@ export class FileUpload implements AfterViewInit,AfterContentInit,OnDestroy,Bloc
         }
 
         if (event.type !== 'drop' && this.isIE11()) {
-          this.clearIEInput();
+            this.clearIEInput();
         } else {
-          this.clearInputElement();
+            this.clearInputElement();
         }
     }
 
@@ -332,9 +340,9 @@ export class FileUpload implements AfterViewInit,AfterContentInit,OnDestroy,Bloc
     upload() {
         if(this.customUpload) {
             if (this.fileLimit) {
-                this.uploadedFileCount += this.files.length; 
+                this.uploadedFileCount += this.files.length;
             }
-            
+
             this.uploadHandler.emit({
                 files: this.files
             });
@@ -368,7 +376,7 @@ export class FileUpload implements AfterViewInit,AfterContentInit,OnDestroy,Bloc
 
                             if (event['status'] >= 200 && event['status'] < 300) {
                                 if (this.fileLimit) {
-                                    this.uploadedFileCount += this.files.length; 
+                                    this.uploadedFileCount += this.files.length;
                                 }
 
                                 this.onUpload.emit({originalEvent: event, files: this.files});
